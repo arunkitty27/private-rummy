@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: private-rummy-server
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PG_SSL
+        value: "true"
+      - key: DATABASE_URL
+        sync: false

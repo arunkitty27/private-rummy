@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Environment files (secrets)
+.env
+.env.local
+.env.production
+!.env.example
+
+# Build artifacts
+*.apk
+*.aab
+*.ipa
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Android build output
+android/app/build/
+android/.gradle/
