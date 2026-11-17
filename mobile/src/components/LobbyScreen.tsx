@@ -19,13 +19,27 @@ export default function LobbyScreen({
   const [name, setName] = useState('');
   const [roomCode, setRoomCode] = useState('');
 
+  const [localError, setLocalError] = useState<string | null>(null);
+
   const handleCreate = () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setLocalError('Please enter your name first.');
+      return;
+    }
+    setLocalError(null);
     onCreateRoom(name.trim());
   };
 
   const handleJoin = () => {
-    if (!name.trim() || !roomCode.trim()) return;
+    if (!name.trim()) {
+      setLocalError('Please enter your name first.');
+      return;
+    }
+    if (!roomCode.trim()) {
+      setLocalError('Please enter a 6-character room code.');
+      return;
+    }
+    setLocalError(null);
     onJoinRoom(name.trim(), roomCode.trim().toUpperCase());
   };
 
@@ -118,9 +132,9 @@ export default function LobbyScreen({
         </View>
 
         {/* Error */}
-        {!!error && (
+        {(!!error || !!localError) && (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>⚠ {error}</Text>
+            <Text style={styles.errorText}>⚠ {error || localError}</Text>
           </View>
         )}
 

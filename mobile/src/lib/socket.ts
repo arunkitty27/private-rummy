@@ -13,7 +13,7 @@ let _socket: Socket | null = null;
 export function getSocket(): Socket {
   if (!_socket) {
     _socket = io(SERVER_URL, {
-      autoConnect: false,
+      autoConnect: true,
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: Infinity,

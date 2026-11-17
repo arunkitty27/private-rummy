@@ -100,12 +100,17 @@ export default function AppScreen() {
     socket.on('game-state', onGameState);
     socket.on('opponent-event', onOpponentEvent);
 
+    if (socket.connected) {
+      dispatch({ type: 'CONNECTED' });
+    } else {
+      socket.connect();
+    }
+
     // Try to restore previous session on mount.
     loadSession().then((savedSession: Session | null) => {
       if (!savedSession) return;
       dispatch({ type: 'SET_SESSION', session: savedSession });
-      socket.connect();
-      socket.once('connect', async () => {
+      const tryResume = async () => {
         try {
           const result = await emitWithAck('resume-room', savedSession);
           if (result?.view) dispatch({ type: 'SET_VIEW', view: result.view });
@@ -114,7 +119,13 @@ export default function AppScreen() {
           await clearSession();
           dispatch({ type: 'RESET' });
         }
-      });
+      };
+
+      if (socket.connected) {
+        tryResume();
+      } else {
+        socket.once('connect', tryResume);
+      }
     });
 
     return () => {
