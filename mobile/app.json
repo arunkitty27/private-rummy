@@ -5,7 +5,18 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "android": {"package": "com.private.rummy", "versionCode": 1},
-    "splash": {"backgroundColor": "#073b2a"}
+    "android": {
+      "package": "com.privaterummy.app",
+      "versionCode": 1
+    },
+    "splash": {
+      "backgroundColor": "#073b2a"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cc9209b2-ff85-4034-b1f3-e3d9295844a7"
+      }
+    },
+    "owner": "arun-kumar-27"
   }
 }
