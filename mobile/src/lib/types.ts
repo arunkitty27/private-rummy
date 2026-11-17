@@ -37,6 +37,7 @@ export interface GameView {
   players: PlayerInfo[];
   hand?: Card[];
   opponentCardCount?: number;
+  opponentHand?: Card[];
   stockCount?: number;
   discardTop?: Card | null;
   discardCount?: number;

@@ -12,7 +12,7 @@ interface GameOverProps {
 }
 
 export default function GameOver({ view, onRematch, onLeave, rematchWaiting }: GameOverProps) {
-  const winner = view.youWon;
+  const youWon = view.youWon ?? false;
   const myScore = view.scores?.you ?? 0;
   const opponentScore = view.scores?.opponent ?? 0;
   const opponentName = view.players?.find(p => !p.isYou)?.name ?? 'Partner';
@@ -22,60 +22,49 @@ export default function GameOver({ view, onRematch, onLeave, rematchWaiting }: G
   return (
     <View style={styles.container}>
       <View style={styles.landscapeRow}>
-        {/* Left Column: Result & Points */}
+        {/* Left Column: Result & Accurate Points */}
         <View style={styles.leftCol}>
-          <View style={[styles.resultBanner, winner ? styles.winBanner : styles.loseBanner]}>
-            <Text style={styles.resultIcon}>{winner ? '🏆' : '🃏'}</Text>
-            <View>
+          <View style={[styles.resultBanner, youWon ? styles.winBanner : styles.loseBanner]}>
+            <Text style={styles.resultIcon}>{youWon ? '🏆' : '🃏'}</Text>
+            <View style={styles.bannerText}>
               <Text style={styles.resultTitle}>
-                {winner ? 'YOU WON!' : `${opponentName.toUpperCase()} WON`}
+                {youWon ? 'YOU WON!' : `${opponentName.toUpperCase()} WON`}
               </Text>
               <Text style={styles.resultSub}>
-                {winner
-                  ? 'Congratulations! Valid 13-card rummy hand declared.'
-                  : 'Good game! Review your cards and start a rematch.'}
+                {youWon
+                  ? 'Congratulations! Valid 13-card Indian Rummy hand declared.'
+                  : `${opponentName} declared a winning hand. Review final cards below.`}
               </Text>
             </View>
           </View>
 
-          {/* Scoreboard */}
+          {/* Accurate Scoreboard */}
           <View style={styles.scoreCard}>
             <Text style={styles.scoreTitle}>PENALTY POINTS</Text>
             <View style={styles.scoreRow}>
-              <View style={[styles.scoreCol, winner && styles.winnerCol]}>
-                <Text style={styles.scorePlayerName}>{myName}</Text>
-                <Text style={[styles.scorePoints, winner && styles.winnerPoints]}>
-                  {winner ? myScore : opponentScore}
+              {/* Your Score */}
+              <View style={[styles.scoreCol, youWon && styles.winnerCol]}>
+                <Text style={styles.scorePlayerName} numberOfLines={1}>{myName} (You)</Text>
+                <Text style={[styles.scorePoints, youWon && styles.winnerPoints]}>
+                  {myScore}
                 </Text>
-                <Text style={styles.scorePtsLabel}>pts</Text>
+                <Text style={styles.scorePtsLabel}>{youWon ? 'WINNER (0 pts)' : 'penalty pts'}</Text>
               </View>
 
               <Text style={styles.vsText}>VS</Text>
 
-              <View style={[styles.scoreCol, !winner && styles.winnerCol]}>
-                <Text style={styles.scorePlayerName}>{opponentName}</Text>
-                <Text style={[styles.scorePoints, !winner && styles.winnerPoints]}>
-                  {winner ? opponentScore : myScore}
+              {/* Opponent Score */}
+              <View style={[styles.scoreCol, !youWon && styles.winnerCol]}>
+                <Text style={styles.scorePlayerName} numberOfLines={1}>{opponentName}</Text>
+                <Text style={[styles.scorePoints, !youWon && styles.winnerPoints]}>
+                  {opponentScore}
                 </Text>
-                <Text style={styles.scorePtsLabel}>pts</Text>
+                <Text style={styles.scorePtsLabel}>{!youWon ? 'WINNER (0 pts)' : 'penalty pts'}</Text>
               </View>
             </View>
           </View>
-        </View>
 
-        {/* Right Column: Hand Review & Actions */}
-        <View style={styles.rightCol}>
-          <Text style={styles.sectionTitle}>YOUR FINAL HAND</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.handRow}
-          >
-            {view.hand?.map(c => (
-              <CardView key={c.id} card={c} size="sm" style={styles.cardItem} />
-            ))}
-          </ScrollView>
-
+          {/* Bottom Rematch Actions */}
           {theyVoted && !rematchWaiting && (
             <View style={styles.theyVotedBanner}>
               <Text style={styles.theyVotedText}>⚡ {opponentName} wants a rematch!</Text>
@@ -97,6 +86,41 @@ export default function GameOver({ view, onRematch, onLeave, rematchWaiting }: G
             </Pressable>
           </View>
         </View>
+
+        {/* Right Column: Both Players' Final Hands Revealed */}
+        <View style={styles.rightCol}>
+          {/* Your Hand */}
+          <Text style={styles.sectionTitle}>
+            YOUR CARDS ({myScore} PTS)
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.handRow}
+          >
+            {view.hand?.map(c => (
+              <CardView key={c.id} card={c} size="sm" style={styles.cardItem} />
+            ))}
+          </ScrollView>
+
+          {/* Opponent's Hand Status */}
+          <Text style={[styles.sectionTitle, { marginTop: 10 }]}>
+            {opponentName.toUpperCase()}'S CARDS ({opponentScore} PTS)
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.handRow}
+          >
+            {view.opponentHand && view.opponentHand.length > 0 ? (
+              view.opponentHand.map(c => (
+                <CardView key={c.id} card={c} size="sm" style={styles.cardItem} />
+              ))
+            ) : (
+              <Text style={styles.noCardsText}>No cards revealed.</Text>
+            )}
+          </ScrollView>
+        </View>
       </View>
     </View>
   );
@@ -115,16 +139,18 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   leftCol: {
-    flex: 1.1,
-    justifyContent: 'center',
-    gap: 12,
+    flex: 1,
+    justifyContent: 'space-between',
   },
   resultBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
     borderRadius: 14,
-    padding: 14,
+    padding: 12,
+  },
+  bannerText: {
+    flex: 1,
   },
   winBanner: {
     backgroundColor: '#134e2e',
@@ -137,11 +163,11 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   resultIcon: {
-    fontSize: 36,
+    fontSize: 32,
   },
   resultTitle: {
     color: COLORS.goldLight,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
     letterSpacing: 1.5,
   },
@@ -155,7 +181,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderColor: COLORS.panelBorder,
     borderWidth: 1,
-    padding: 12,
+    padding: 10,
+    marginVertical: 4,
   },
   scoreTitle: {
     color: COLORS.textLabel,
@@ -163,26 +190,26 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1.5,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   scoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
+    gap: 12,
   },
   scoreCol: {
+    flex: 1,
     alignItems: 'center',
     backgroundColor: COLORS.inputBg,
     borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    minWidth: 100,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
   },
   winnerCol: {
     backgroundColor: '#1a4e2c',
     borderColor: COLORS.gold,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   scorePlayerName: {
     color: COLORS.textPrimary,
@@ -191,7 +218,7 @@ const styles = StyleSheet.create({
   },
   scorePoints: {
     color: COLORS.textSecondary,
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
   },
   winnerPoints: {
@@ -200,6 +227,7 @@ const styles = StyleSheet.create({
   scorePtsLabel: {
     color: COLORS.textMuted,
     fontSize: 9,
+    fontWeight: '700',
   },
   vsText: {
     color: COLORS.textMuted,
@@ -208,27 +236,32 @@ const styles = StyleSheet.create({
   },
 
   rightCol: {
-    flex: 1,
+    flex: 1.2,
     backgroundColor: COLORS.panelBg,
     borderRadius: 14,
     borderColor: COLORS.panelBorder,
     borderWidth: 1,
-    padding: 14,
-    justifyContent: 'space-between',
+    padding: 12,
+    justifyContent: 'center',
   },
   sectionTitle: {
-    color: COLORS.textLabel,
+    color: COLORS.goldLight,
     fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 1.5,
-    marginBottom: 6,
+    letterSpacing: 1,
+    marginBottom: 4,
   },
   handRow: {
     flexDirection: 'row',
-    marginVertical: 8,
+    paddingVertical: 2,
   },
   cardItem: {
     marginRight: 4,
+  },
+  noCardsText: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   theyVotedBanner: {
     backgroundColor: 'rgba(82, 209, 140, 0.15)',
@@ -246,13 +279,12 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 8,
   },
   rematchBtn: {
     flex: 2,
     backgroundColor: COLORS.gold,
     borderRadius: 10,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   waitingBtn: {
@@ -271,7 +303,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.panelBorder,
     borderWidth: 1,
     borderRadius: 10,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   leaveBtnText: {

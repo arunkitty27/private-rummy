@@ -113,7 +113,7 @@ export function playerView(room, playerIndex) {
     // This player's own hand — full card data.
     hand: g.hands[playerIndex].map(c => ({ ...c })),
 
-    // Opponent's card COUNT only — never card data.
+    // Opponent's card COUNT only — never card data during active play.
     opponentCardCount: g.hands[oppIndex].length,
 
     // Shared visible state.
@@ -145,6 +145,11 @@ export function playerView(room, playerIndex) {
           opponent: !!(room.rematchVotes[oppIndex]),
         }
       : null,
+
+    // Opponent's final hand revealed ONLY when game has finished
+    ...(g.status === 'finished'
+      ? { opponentHand: g.hands[oppIndex].map(c => ({ ...c })) }
+      : {}),
   };
 }
 
