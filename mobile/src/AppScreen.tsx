@@ -62,10 +62,20 @@ function reducer(state: AppState, action: AppAction): AppState {
 // ---------------------------------------------------------------------------
 export default function AppScreen() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [rematchWaiting, setRematchWaiting] = useState(false);
 
   const { screen, session, view, error, busy, connected, opponentConnected, opponentLeft } = state;
+
+  const handleToggleSelectCard = useCallback((id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds([]);
+  }, []);
 
   // ---- Socket setup ----
   useEffect(() => {
@@ -77,8 +87,7 @@ export default function AppScreen() {
     const onGameState = (payload: { view: GameView }) => {
       if (payload?.view) {
         dispatch({ type: 'SET_VIEW', view: payload.view });
-        setSelectedCardId(null);
-        // If a rematch started (both voted), clear waiting state.
+        setSelectedIds([]);
         if (payload.view.status === 'playing' && payload.view.winner === null) {
           setRematchWaiting(false);
         }
@@ -89,10 +98,6 @@ export default function AppScreen() {
       if (evt.type === 'disconnected') dispatch({ type: 'OPPONENT_DISCONNECTED' });
       else if (evt.type === 'reconnected') dispatch({ type: 'OPPONENT_RECONNECTED' });
       else if (evt.type === 'left') dispatch({ type: 'OPPONENT_LEFT' });
-      else if (evt.type === 'rematch-vote') {
-        // Update rematch votes in view by requesting fresh state.
-        // The server should push a game-state update too; this is a fallback.
-      }
     };
 
     socket.on('connect', onConnect);
@@ -106,7 +111,7 @@ export default function AppScreen() {
       socket.connect();
     }
 
-    // Try to restore previous session on mount.
+    // Try to restore previous session on mount
     loadSession().then((savedSession: Session | null) => {
       if (!savedSession) return;
       dispatch({ type: 'SET_SESSION', session: savedSession });
@@ -114,8 +119,7 @@ export default function AppScreen() {
         try {
           const result = await emitWithAck('resume-room', savedSession);
           if (result?.view) dispatch({ type: 'SET_VIEW', view: result.view });
-        } catch (e: any) {
-          // Session expired or room gone — start fresh.
+        } catch {
           await clearSession();
           dispatch({ type: 'RESET' });
         }
@@ -191,7 +195,7 @@ export default function AppScreen() {
     (cardId: string) =>
       withBusy(async () => {
         if (!session) return;
-        setSelectedCardId(null);
+        setSelectedIds([]);
         await emitWithAck('game-action', { ...session, action: 'discard', payload: { cardId } });
       }),
     [session, withBusy]
@@ -223,25 +227,15 @@ export default function AppScreen() {
       try { await emitWithAck('leave-room', session); } catch {}
     }
     await clearSession();
-    socket.disconnect();
     dispatch({ type: 'RESET' });
-    setSelectedCardId(null);
+    setSelectedIds([]);
     setRematchWaiting(false);
   }, [session]);
 
   // ---- Render ----
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar style="light" />
-
-      {/* Global header */}
-      <View style={styles.header}>
-        <Text style={styles.brand}>♠ PRIVATE RUMMY</Text>
-        <View style={styles.connRow}>
-          <View style={[styles.connDot, { backgroundColor: connected ? COLORS.success : COLORS.warning }]} />
-          <Text style={styles.connText}>{connected ? 'LIVE' : 'OFFLINE'}</Text>
-        </View>
-      </View>
+      <StatusBar hidden />
 
       {/* Opponent left overlay */}
       {opponentLeft && (
@@ -276,8 +270,9 @@ export default function AppScreen() {
             view={view}
             opponentConnected={opponentConnected}
             roomCode={session?.roomCode ?? ''}
-            selectedId={selectedCardId}
-            onSelectCard={setSelectedCardId}
+            selectedIds={selectedIds}
+            onToggleSelectCard={handleToggleSelectCard}
+            onClearSelection={handleClearSelection}
             onDraw={handleDraw}
             onDiscard={handleDiscard}
             onDeclare={handleDeclare}
@@ -301,31 +296,12 @@ export default function AppScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bg },
+  safe: { flex: 1, backgroundColor: COLORS.bgDark },
   flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomColor: COLORS.panelBorder,
-    borderBottomWidth: 1,
-    backgroundColor: COLORS.bgDark,
-  },
-  brand: {
-    color: COLORS.goldLight,
-    fontWeight: '900',
-    fontSize: 16,
-    letterSpacing: 1.5,
-    flex: 1,
-  },
-  connRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  connDot: { width: 7, height: 7, borderRadius: 4 },
-  connText: { color: COLORS.textMuted, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
   overlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(3,24,15,0.92)',
+    backgroundColor: 'rgba(3,24,15,0.94)',
     zIndex: 999,
     alignItems: 'center',
     justifyContent: 'center',
@@ -337,7 +313,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   overlaySub: { color: COLORS.textSecondary, fontSize: 13, textAlign: 'center' },
 });

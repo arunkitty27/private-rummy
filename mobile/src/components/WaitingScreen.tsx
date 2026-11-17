@@ -11,14 +11,14 @@ interface WaitingScreenProps {
   onLeave: () => void;
 }
 
-export default function WaitingScreen({ roomCode, playerName, onLeave }: WaitingScreenProps) {
-  const dots = useRef(new Animated.Value(0)).current;
+export default function WaitingScreen({ roomCode, onLeave }: WaitingScreenProps) {
+  const dots = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(dots, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.timing(dots, { toValue: 0, duration: 600, useNativeDriver: true }),
+        Animated.timing(dots, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(dots, { toValue: 0.3, duration: 700, useNativeDriver: true }),
       ])
     );
     anim.start();
@@ -45,133 +45,135 @@ export default function WaitingScreen({ roomCode, playerName, onLeave }: Waiting
   };
 
   return (
-    <View style={styles.container}>
-      {/* Animated waiting indicator */}
-      <Animated.View style={[styles.pulseCircle, { opacity: dots }]}>
-        <Text style={styles.pulseIcon}>⏳</Text>
-      </Animated.View>
+    <View style={styles.root}>
+      <View style={styles.card}>
+        <View style={styles.leftCol}>
+          <Animated.View style={[styles.pulseCircle, { opacity: dots }]}>
+            <Text style={styles.pulseIcon}>⏳</Text>
+          </Animated.View>
+          <Text style={styles.title}>Waiting for your partner</Text>
+          <Text style={styles.subtitle}>
+            Share this 6-character code with your partner to start the game.
+          </Text>
+        </View>
 
-      <Text style={styles.title}>Waiting for your partner</Text>
-      <Text style={styles.subtitle}>
-        Share this room code with the person you want to play with.
-      </Text>
+        <View style={styles.rightCol}>
+          <Text style={styles.codeLabel}>ROOM CODE</Text>
+          <Text style={styles.codeText}>{roomCode}</Text>
 
-      {/* Room code display */}
-      <View style={styles.codeCard}>
-        <Text style={styles.codeLabel}>ROOM CODE</Text>
-        <Text style={styles.code}>{roomCode}</Text>
-        <Pressable style={styles.copyBtn} onPress={copyCode} accessibilityLabel="Copy room code">
-          <Text style={styles.copyBtnText}>📤  SHARE CODE</Text>
-        </Pressable>
+          <View style={styles.buttonRow}>
+            <Pressable style={styles.shareBtn} onPress={copyCode}>
+              <Text style={styles.shareBtnText}>📤  SHARE CODE</Text>
+            </Pressable>
+
+            <Pressable style={styles.leaveBtn} onPress={confirmLeave}>
+              <Text style={styles.leaveBtnText}>✕ LEAVE</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
-
-      {/* Info */}
-      <View style={styles.infoBox}>
-        <Text style={styles.infoText}>
-          ℹ  Both players need an internet connection. The game starts automatically when your partner joins.
-        </Text>
-      </View>
-
-      {/* Leave */}
-      <Pressable style={styles.leaveBtn} onPress={confirmLeave} accessibilityLabel="Leave room">
-        <Text style={styles.leaveBtnText}>LEAVE ROOM</Text>
-      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    alignItems: 'center',
+    backgroundColor: COLORS.bgDark,
     justifyContent: 'center',
-    padding: 28,
-  },
-  pulseCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: COLORS.panelBg,
-    borderColor: COLORS.panelBorder,
-    borderWidth: 2,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
+    padding: 24,
   },
-  pulseIcon: { fontSize: 32 },
-  title: {
-    color: COLORS.textPrimary,
-    fontSize: 22,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    lineHeight: 20,
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  codeCard: {
+  card: {
+    flexDirection: 'row',
+    width: '90%',
+    maxWidth: 680,
     backgroundColor: COLORS.panelBg,
     borderColor: COLORS.gold,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
-    width: '100%',
-    marginBottom: 20,
+    gap: 24,
+  },
+  leftCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  pulseCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  pulseIcon: {
+    fontSize: 28,
+  },
+  title: {
+    color: COLORS.textPrimary,
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  subtitle: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  rightCol: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    borderColor: COLORS.panelBorder,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
   },
   codeLabel: {
     color: COLORS.textLabel,
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 2,
-    marginBottom: 10,
+    marginBottom: 4,
   },
-  code: {
+  codeText: {
     color: COLORS.goldLight,
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '900',
-    letterSpacing: 8,
-    marginBottom: 20,
+    letterSpacing: 6,
+    marginBottom: 16,
   },
-  copyBtn: {
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  shareBtn: {
     backgroundColor: COLORS.gold,
     borderRadius: 10,
-    paddingVertical: 11,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
-  copyBtnText: {
+  shareBtnText: {
     color: COLORS.bgDark,
-    fontWeight: '900',
-    fontSize: 13,
-    letterSpacing: 1,
-  },
-  infoBox: {
-    backgroundColor: COLORS.panelBg,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 32,
-  },
-  infoText: {
-    color: COLORS.textSecondary,
     fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   leaveBtn: {
-    borderColor: '#d1716a',
+    borderColor: '#e74c3c',
     borderWidth: 1,
     borderRadius: 10,
-    paddingVertical: 11,
-    paddingHorizontal: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    justifyContent: 'center',
   },
   leaveBtnText: {
-    color: '#f1a19a',
-    fontWeight: '800',
+    color: '#ffb4a9',
     fontSize: 12,
-    letterSpacing: 1,
+    fontWeight: '800',
   },
 });

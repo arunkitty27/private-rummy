@@ -3,7 +3,7 @@
     "name": "Private Rummy",
     "slug": "private-rummy",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "userInterfaceStyle": "dark",
     "android": {
       "package": "com.privaterummy.app",
