@@ -1,7 +1,8 @@
 // App-wide constants
 
 export const SERVER_URL =
-  (process.env.EXPO_PUBLIC_SERVER_URL as string | undefined) || 'http://localhost:3000';
+  (process.env.EXPO_PUBLIC_SERVER_URL as string | undefined) ||
+  'https://private-rummy-g70v.onrender.com';
 
 export const STORAGE_KEY = 'rummy-session-v2';
 
